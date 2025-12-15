@@ -465,10 +465,25 @@ function datasetInfo(blocks, country, limit = 5) {
 }
 
 const app = express();
-app.use(express.static(path.join(__dirname, "public")));
+const publicDir = path.join(__dirname, "public");
+app.use(express.static(publicDir, { index: false }));
 
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  const indexPath = path.join(publicDir, "index.html");
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.type("html").send(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Recfor</title></head><body><div style="font-family:system-ui;padding:20px"><h1>Recfor</h1><p>UI not found. Try API endpoints below:</p><ul><li><code>/recommendations?country=Japan&mode=hidden_gem&limit=5</code></li><li><code>/dataset-info?country=Japan</code></li><li><code>/health</code></li></ul></div></body></html>`);
+  }
+});
+app.get("*", (req, res, next) => {
+  if (req.path.startsWith("/recommendations") || req.path.startsWith("/dataset-info") || req.path.startsWith("/health")) return next();
+  const indexPath = path.join(publicDir, "index.html");
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.type("html").send(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Recfor</title></head><body><div style="font-family:system-ui;padding:20px"><h1>Recfor</h1><p>UI not found. Try API endpoints below:</p><ul><li><code>/recommendations?country=Japan&mode=hidden_gem&limit=5</code></li><li><code>/dataset-info?country=Japan</code></li><li><code>/health</code></li></ul></div></body></html>`);
+  }
 });
 
 app.get("/recommendations", (req, res) => {
